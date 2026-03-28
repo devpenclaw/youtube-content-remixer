@@ -99,8 +99,8 @@
     
     .btn-secondary:hover { background: var(--border); }
     
-    .row { display: flex; gap: 12px; }
-    .row .form-group { flex: 1; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row .form-group { flex: 1; min-width: 150px; }
     .row .btn { align-self: flex-end; }
     
     .results { display: none; }
@@ -200,6 +200,21 @@
       border-top: 1px solid var(--border);
       margin-top: 40px;
     }
+    
+    .api-key-note {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+    }
+    
+    .ai-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10px;
+      margin-left: 8px;
+    }
   </style>
 </head>
 <body>
@@ -210,7 +225,7 @@
   </header>
   
   <main class="container">
-    <h1>Transform Trending Ideas Into Your Niche</h1>
+    <h1>Transform Trending Ideas Into Your Niche <span class="ai-badge">AI Powered</span></h1>
     
     <div class="card">
       <div class="row">
@@ -231,6 +246,11 @@
           <label>Your Niche (Target)</label>
           <input type="text" id="targetNiche" placeholder="e.g. AI Tools, Crypto, Coding..." value="AI Tools">
         </div>
+        <div class="form-group" style="min-width: 280px;">
+          <label>OpenAI API Key <span class="ai-badge">✨ AI Remix</span></label>
+          <input type="password" id="apiKey" placeholder="sk-proj-... (optional)">
+          <p class="api-key-note">Enter your key for AI-powered remixing. Key stays in your browser.</p>
+        </div>
         <button class="btn btn-primary" onclick="runRemix()">🎬 Remix Titles</button>
       </div>
     </div>
@@ -249,11 +269,7 @@
     
     <div id="loading" class="loading" style="display: none;">
       <div class="spinner"></div>
-      <p>Remixing content for your niche...</p>
-    </div>
-    
-    <div id="error" class="card" style="display: none; background: #7f1d1d;">
-      <p id="errorMessage"></p>
+      <p id="loadingText">Remixing content for your niche...</p>
     </div>
     
     <div class="section">
@@ -287,45 +303,27 @@
       { title: "What Doctors Won't Tell You About Sleep", views: "6M" }
     ];
     
-    const remixPatterns = [
-      { pattern: "I Tried {X} for {Y}", template: "I Tried {target} for 30 Days - Results" },
-      { pattern: "The Secret to {X}", template: "The {target} Secret Nobody Tells You" },
-      { pattern: "How I Made ${X}", template: "How I Made ${target} Using {targetNiche}" },
-      { pattern: "Why You're Still {X}", template: "Why You're Still Failing at {target}" },
-      { pattern: "{X} vs {Y}", template: "{target} vs {targetNiche} - What Nobody Knows" },
-      { pattern: "The Ultimate Guide to {X}", template: "The Ultimate {target} Guide (That Actually Works)" },
-      { pattern: "What {Experts} Say about {X}", template: "What {targetNiche} Experts Won't Tell You" },
-      { pattern: "I Left Everything and {X}", template: "I Left My Job to Master {target} - Full Journey" }
-    ];
-    
-    function remixTitle(original, target, targetNiche) {
-      // Simple pattern-based remix
+    function remixTitle(original, targetNiche) {
       const templates = [
-        `The ${target} Secret Nobody's Talking About`,
-        `What "${original.substring(0, 30)}..." Taught Me About ${target}`,
-        `Why ${target} Is the Future (And You're Behind)`,
-        `${targetNiche} vs ${target} - Complete Comparison`,
-        `I Tried ${target} for 30 Days - Here's What Happened`,
-        `The ${target} Guide Nobody Asked For (But You Need)`,
-        `How to Master ${target} in 2024 (Step by Step)`,
-        `Why ${target} Will Change Everything This Year`
+        `The ${targetNiche} Secret Nobody's Talking About`,
+        `What "${original.substring(0, 25)}..." Taught Me About ${targetNiche}`,
+        `Why ${targetNiche} Is the Future (And You're Behind)`,
+        `${targetNiche} vs Competitors - Complete Comparison`,
+        `I Tried ${targetNiche} for 30 Days - Here's What Happened`,
+        `The ${targetNiche} Guide Nobody Asked For (But You Need)`,
+        `How to Master ${targetNiche} in 2024 (Step by Step)`,
+        `Why ${targetNiche} Will Change Everything This Year`
       ];
-      
       return templates[Math.floor(Math.random() * templates.length)];
     }
     
     function getScore(title) {
-      // Simple scoring based on power words
       const powerWords = ['secret', 'ultimate', 'complete', 'proven', 'shocking', 'truth', 'mistake', 'guide'];
       const hasPowerWord = powerWords.some(w => title.toLowerCase().includes(w));
-      const length = title.length;
-      
       let score = 60;
       if (hasPowerWord) score += 20;
-      if (length > 40 && length < 60) score += 15;
+      if (title.length > 40 && title.length < 60) score += 15;
       if (title.includes(' vs ')) score += 10;
-      if (title.includes(' - ')) score += 5;
-      
       return Math.min(100, score);
     }
     
@@ -335,97 +333,135 @@
       return 'low';
     }
     
-    function generateIdeas(target, targetNiche) {
+    function generateIdeas(niche) {
       return [
-        {
-          title: `The "${target}" Formula Nobody Knows`,
-          hook: "This one technique changed everything",
-          points: ["The hidden formula", "Step-by-step breakdown", "Real example"]
-        },
-        {
-          title: `${targetNiche} x ${target} - The Perfect Combo`,
-          hook: "Why combining these is a game-changer",
-          points: ["Why it works", "How to combine", "Mistakes to avoid"]
-        },
-        {
-          title: `I Used ${target} for 30 Days - Full Review`,
-          hook: "Day 1 vs Day 30 results",
-          points: ["The process", "Real transformation", "Honest verdict"]
-        },
-        {
-          title: `Why "${target}" Is Overrated (And What's Better)`,
-          hook: "Unpopular opinion incoming",
-          points: ["What everyone gets wrong", "The better approach", "Pro tips"]
-        },
-        {
-          title: `${target} Mastery: From Zero to Expert`,
-          hook: "The complete roadmap",
-          points: ["Start here", "Level up", "Expert strategies"]
-        }
+        { title: `The "${niche}" Formula Nobody Knows`, hook: "This one technique changed everything", points: ["The hidden formula", "Step-by-step breakdown", "Real example"] },
+        { title: `${niche} x Growth - The Perfect Combo`, hook: "Why combining these is a game-changer", points: ["Why it works", "How to combine", "Mistakes to avoid"] },
+        { title: `I Used ${niche} for 30 Days - Full Review`, hook: "Day 1 vs Day 30 results", points: ["The process", "Real transformation", "Honest verdict"] },
+        { title: `Why "${niche}" Is Overrated (And What's Better)`, hook: "Unpopular opinion incoming", points: ["What everyone gets wrong", "The better approach", "Pro tips"] },
+        { title: `${niche} Mastery: From Zero to Expert`, hook: "The complete roadmap", points: ["Start here", "Level up", "Expert strategies"] }
       ];
     }
     
+    async function remixTitleAI(original, targetNiche, apiKey) {
+      if (!apiKey) return remixTitle(original, targetNiche);
+      
+      try {
+        document.getElementById('loadingText').textContent = '✨ AI is remixing titles...';
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: `Transform this YouTube title for a new niche.
+
+ORIGINAL: "${original}"
+TARGET NICHE: ${targetNiche}
+
+Rules:
+- Keep the SAME emotional hook/pattern
+- Make it about "${targetNiche}" instead
+- Use power words: secret, truth, proven, shocking, ultimate
+- Keep under 60 characters
+- Stay factual, no clickbait lies
+
+Return ONLY the new title, nothing else.` }],
+            max_tokens: 50,
+            temperature: 0.8
+          })
+        });
+        const data = await response.json();
+        if (data.choices && data.choices[0]) {
+          return data.choices[0].message.content.trim();
+        }
+      } catch (e) {
+        console.log('AI remix failed, using fallback');
+      }
+      return remixTitle(original, targetNiche);
+    }
+    
+    async function generateIdeasAI(niche, apiKey) {
+      if (!apiKey) {
+        return generateIdeas(niche).map(idea => `
+          <div class="idea-item">
+            <div class="idea-title">💡 ${idea.title}</div>
+            <div class="idea-meta"><strong>🎬 Hook:</strong> ${idea.hook}<br><strong>📝 Points:</strong> ${idea.points.join(' → ')}</div>
+          </div>
+        `).join('');
+      }
+      
+      try {
+        document.getElementById('loadingText').textContent = '💡 AI is generating ideas...';
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [{ role: 'user', content: `Generate 5 unique YouTube video ideas for the niche: "${niche}"
+
+Format like this:
+TITLE: [catchy title]
+HOOK: [first 10 seconds hook]
+POINTS: [point1] → [point2] → [point3]
+
+Make each title unique and curiosity-inducing.` }],
+            max_tokens: 600,
+            temperature: 0.8
+          })
+        });
+        const data = await response.json();
+        if (data.choices && data.choices[0]) {
+          return data.choices[0].message.content.split('\n').map(line => {
+            if (line.includes('TITLE:')) return `<div class="idea-item"><div class="idea-title">💡 ${line.replace(/.*TITLE:\s*/, '')}</div>`;
+            if (line.includes('HOOK:')) return `<div class="idea-meta"><strong>🎬 Hook:</strong> ${line.replace(/.*HOOK:\s*/, '')}<br>`;
+            if (line.includes('POINTS:')) return `<strong>📝 Points:</strong> ${line.replace(/.*POINTS:\s*/, '')}</div></div>`;
+            return '';
+          }).join('');
+        }
+      } catch (e) {
+        console.log('AI ideas failed, using fallback');
+      }
+      return generateIdeas(niche).map(idea => `
+        <div class="idea-item">
+          <div class="idea-title">💡 ${idea.title}</div>
+          <div class="idea-meta"><strong>🎬 Hook:</strong> ${idea.hook}<br><strong>📝 Points:</strong> ${idea.points.join(' → ')}</div>
+        </div>
+      `).join('');
+    }
+    
     async function runRemix() {
-      const sourceNiche = document.getElementById('sourceNiche').value;
       const targetNiche = document.getElementById('targetNiche').value.trim();
+      const apiKey = document.getElementById('apiKey').value.trim();
       
       if (!targetNiche) {
-        showError("Please enter your target niche");
+        alert('Please enter your target niche');
         return;
       }
       
-      // Show loading
       document.getElementById('results').classList.remove('show');
       document.getElementById('loading').style.display = 'block';
-      document.getElementById('error').style.display = 'none';
+      document.getElementById('loadingText').textContent = apiKey ? '✨ AI is remixing titles...' : 'Generating titles...';
       
-      // Simulate API delay
-      await new Promise(r => setTimeout(r, 1500));
-      
-      // Generate remixed titles
       const remixedContainer = document.getElementById('remixedTitles');
       remixedContainer.innerHTML = '';
       
-      sampleTitles.slice(0, 5).forEach(item => {
-        const remixed = remixTitle(item.title, targetNiche, targetNiche);
+      for (const item of sampleTitles.slice(0, 5)) {
+        const remixed = await remixTitleAI(item.title, targetNiche, apiKey);
         const score = getScore(remixed);
-        
-        const div = document.createElement('div');
-        div.className = 'title-item';
-        div.innerHTML = `
-          <div class="original">"${item.title}" <span style="color: #666">(${item.views} views)</span></div>
-          <div class="remixed">✨ "${remixed}" <span class="score ${getScoreClass(score)}">${score}/100</span></div>
-        `;
-        remixedContainer.appendChild(div);
-      });
-      
-      // Generate ideas
-      document.getElementById('nicheName').textContent = targetNiche;
-      const ideasContainer = document.getElementById('videoIdeas');
-      ideasContainer.innerHTML = '';
-      
-      const ideas = generateIdeas(targetNiche, targetNiche);
-      ideas.forEach(idea => {
-        const div = document.createElement('div');
-        div.className = 'idea-item';
-        div.innerHTML = `
-          <div class="idea-title">💡 ${idea.title}</div>
-          <div class="idea-meta">
-            <strong>🎬 Hook:</strong> ${idea.hook}<br>
-            <strong>📝 Points:</strong> ${idea.points.join(' → ')}
+        remixedContainer.innerHTML += `
+          <div class="title-item">
+            <div class="original">"${item.title}" <span style="color: #666">(${item.views})</span></div>
+            <div class="remixed">✨ "${remixed}" <span class="score ${getScoreClass(score)}">${score}/100</span></div>
           </div>
         `;
-        ideasContainer.appendChild(div);
-      });
+      }
       
-      // Show results
+      document.getElementById('nicheName').textContent = targetNiche;
+      document.getElementById('loadingText').textContent = 'Generating video ideas...';
+      document.getElementById('videoIdeas').innerHTML = await generateIdeasAI(targetNiche, apiKey);
+      
       document.getElementById('loading').style.display = 'none';
       document.getElementById('results').classList.add('show');
-    }
-    
-    function showError(msg) {
-      document.getElementById('errorMessage').textContent = msg;
-      document.getElementById('error').style.display = 'block';
     }
   </script>
 </body>
