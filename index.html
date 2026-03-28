@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Content Remixer 🎬</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-primary: #0f0f0f;
+      --bg-secondary: #1a1a1a;
+      --bg-card: #252525;
+      --text-primary: #ffffff;
+      --text-secondary: #aaaaaa;
+      --accent: #ff0000;
+      --accent-hover: #cc0000;
+      --border: #333;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    
+    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    
+    header {
+      background: var(--bg-secondary);
+      padding: 20px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .logo { font-size: 24px; font-weight: bold; }
+    .logo span { color: var(--accent); }
+    
+    h1 { font-size: 28px; margin: 30px 0 20px; }
+    h2 { font-size: 20px; margin: 20px 0 15px; color: var(--text-secondary); }
+    
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    
+    .form-group { margin-bottom: 16px; }
+    
+    label {
+      display: block;
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 6px;
+    }
+    
+    input, select {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+    
+    .btn-primary:hover { background: var(--accent-hover); }
+    .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+    
+    .btn-secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border);
+    }
+    
+    .btn-secondary:hover { background: var(--border); }
+    
+    .row { display: flex; gap: 12px; }
+    .row .form-group { flex: 1; }
+    .row .btn { align-self: flex-end; }
+    
+    .results { display: none; }
+    .results.show { display: block; }
+    
+    .section { margin: 30px 0; }
+    
+    .title-item {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .original {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+    
+    .original::before { content: "📍 Original: "; }
+    
+    .remixed {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    
+    .score {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: bold;
+      margin-left: 10px;
+    }
+    
+    .score.high { background: #22c55e; color: white; }
+    .score.medium { background: #eab308; color: black; }
+    .score.low { background: #ef4444; color: white; }
+    
+    .idea-item {
+      padding: 16px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      margin-bottom: 12px;
+    }
+    
+    .idea-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    
+    .idea-meta {
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+    
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    
+    .trending-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 12px;
+    }
+    
+    .trending-item {
+      padding: 12px;
+      background: var(--bg-secondary);
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 30px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      border-top: 1px solid var(--border);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="logo">🎬 <span>YouTube Content Remixer</span></div>
+    </div>
+  </header>
+  
+  <main class="container">
+    <h1>Transform Trending Ideas Into Your Niche</h1>
+    
+    <div class="card">
+      <div class="row">
+        <div class="form-group">
+          <label>Source Niche (Trending)</label>
+          <select id="sourceNiche">
+            <option value="General">General Trending</option>
+            <option value="Lifestyle">Lifestyle</option>
+            <option value="Tech">Tech</option>
+            <option value="Gaming">Gaming</option>
+            <option value="Finance">Finance</option>
+            <option value="Health">Health & Fitness</option>
+            <option value="Business">Business</option>
+            <option value="Education">Education</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Your Niche (Target)</label>
+          <input type="text" id="targetNiche" placeholder="e.g. AI Tools, Crypto, Coding..." value="AI Tools">
+        </div>
+        <button class="btn btn-primary" onclick="runRemix()">🎬 Remix Titles</button>
+      </div>
+    </div>
+    
+    <div id="results" class="results">
+      <div class="section">
+        <h2>✍️ Remixed Titles</h2>
+        <div id="remixedTitles"></div>
+      </div>
+      
+      <div class="section">
+        <h2>💡 Video Ideas for <span id="nicheName"></span></h2>
+        <div id="videoIdeas"></div>
+      </div>
+    </div>
+    
+    <div id="loading" class="loading" style="display: none;">
+      <div class="spinner"></div>
+      <p>Remixing content for your niche...</p>
+    </div>
+    
+    <div id="error" class="card" style="display: none; background: #7f1d1d;">
+      <p id="errorMessage"></p>
+    </div>
+    
+    <div class="section">
+      <h2>📊 Sample Trending Patterns</h2>
+      <div class="trending-grid">
+        <div class="trending-item">"I Tried X for 30 Days - Results"</div>
+        <div class="trending-item">"The Secret Nobody Tells You About X"</div>
+        <div class="trending-item">"How I Made $X in One Week"</div>
+        <div class="trending-item">"Why You're Still Failing at X"</div>
+        <div class="trending-item">"X vs Y - What Nobody Knows"</div>
+        <div class="trending-item">"The Ultimate Guide to X"</div>
+        <div class="trending-item">"I Left Everything and Did X"</div>
+        <div class="trending-item">"What Experts Say About X"</div>
+      </div>
+    </div>
+  </main>
+  
+  <footer>
+    <p>🎬 YouTube Content Remixer | Turn trending ideas into original content</p>
+  </footer>
+  
+  <script>
+    const sampleTitles = [
+      { title: "I Tried Living Like a Billionaire for 24 Hours", views: "10M" },
+      { title: "The Secret to Success Nobody Tells You", views: "5M" },
+      { title: "How I Made $10,000 in One Week", views: "8M" },
+      { title: "Why You're Still Broke (Math Explained)", views: "3M" },
+      { title: "I Bought Everything in One Store Challenge", views: "15M" },
+      { title: "The TRUTH About Intermittent Fasting", views: "4M" },
+      { title: "Building My Dream House in 30 Days", views: "20M" },
+      { title: "What Doctors Won't Tell You About Sleep", views: "6M" }
+    ];
+    
+    const remixPatterns = [
+      { pattern: "I Tried {X} for {Y}", template: "I Tried {target} for 30 Days - Results" },
+      { pattern: "The Secret to {X}", template: "The {target} Secret Nobody Tells You" },
+      { pattern: "How I Made ${X}", template: "How I Made ${target} Using {targetNiche}" },
+      { pattern: "Why You're Still {X}", template: "Why You're Still Failing at {target}" },
+      { pattern: "{X} vs {Y}", template: "{target} vs {targetNiche} - What Nobody Knows" },
+      { pattern: "The Ultimate Guide to {X}", template: "The Ultimate {target} Guide (That Actually Works)" },
+      { pattern: "What {Experts} Say about {X}", template: "What {targetNiche} Experts Won't Tell You" },
+      { pattern: "I Left Everything and {X}", template: "I Left My Job to Master {target} - Full Journey" }
+    ];
+    
+    function remixTitle(original, target, targetNiche) {
+      // Simple pattern-based remix
+      const templates = [
+        `The ${target} Secret Nobody's Talking About`,
+        `What "${original.substring(0, 30)}..." Taught Me About ${target}`,
+        `Why ${target} Is the Future (And You're Behind)`,
+        `${targetNiche} vs ${target} - Complete Comparison`,
+        `I Tried ${target} for 30 Days - Here's What Happened`,
+        `The ${target} Guide Nobody Asked For (But You Need)`,
+        `How to Master ${target} in 2024 (Step by Step)`,
+        `Why ${target} Will Change Everything This Year`
+      ];
+      
+      return templates[Math.floor(Math.random() * templates.length)];
+    }
+    
+    function getScore(title) {
+      // Simple scoring based on power words
+      const powerWords = ['secret', 'ultimate', 'complete', 'proven', 'shocking', 'truth', 'mistake', 'guide'];
+      const hasPowerWord = powerWords.some(w => title.toLowerCase().includes(w));
+      const length = title.length;
+      
+      let score = 60;
+      if (hasPowerWord) score += 20;
+      if (length > 40 && length < 60) score += 15;
+      if (title.includes(' vs ')) score += 10;
+      if (title.includes(' - ')) score += 5;
+      
+      return Math.min(100, score);
+    }
+    
+    function getScoreClass(score) {
+      if (score >= 80) return 'high';
+      if (score >= 60) return 'medium';
+      return 'low';
+    }
+    
+    function generateIdeas(target, targetNiche) {
+      return [
+        {
+          title: `The "${target}" Formula Nobody Knows`,
+          hook: "This one technique changed everything",
+          points: ["The hidden formula", "Step-by-step breakdown", "Real example"]
+        },
+        {
+          title: `${targetNiche} x ${target} - The Perfect Combo`,
+          hook: "Why combining these is a game-changer",
+          points: ["Why it works", "How to combine", "Mistakes to avoid"]
+        },
+        {
+          title: `I Used ${target} for 30 Days - Full Review`,
+          hook: "Day 1 vs Day 30 results",
+          points: ["The process", "Real transformation", "Honest verdict"]
+        },
+        {
+          title: `Why "${target}" Is Overrated (And What's Better)`,
+          hook: "Unpopular opinion incoming",
+          points: ["What everyone gets wrong", "The better approach", "Pro tips"]
+        },
+        {
+          title: `${target} Mastery: From Zero to Expert`,
+          hook: "The complete roadmap",
+          points: ["Start here", "Level up", "Expert strategies"]
+        }
+      ];
+    }
+    
+    async function runRemix() {
+      const sourceNiche = document.getElementById('sourceNiche').value;
+      const targetNiche = document.getElementById('targetNiche').value.trim();
+      
+      if (!targetNiche) {
+        showError("Please enter your target niche");
+        return;
+      }
+      
+      // Show loading
+      document.getElementById('results').classList.remove('show');
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('error').style.display = 'none';
+      
+      // Simulate API delay
+      await new Promise(r => setTimeout(r, 1500));
+      
+      // Generate remixed titles
+      const remixedContainer = document.getElementById('remixedTitles');
+      remixedContainer.innerHTML = '';
+      
+      sampleTitles.slice(0, 5).forEach(item => {
+        const remixed = remixTitle(item.title, targetNiche, targetNiche);
+        const score = getScore(remixed);
+        
+        const div = document.createElement('div');
+        div.className = 'title-item';
+        div.innerHTML = `
+          <div class="original">"${item.title}" <span style="color: #666">(${item.views} views)</span></div>
+          <div class="remixed">✨ "${remixed}" <span class="score ${getScoreClass(score)}">${score}/100</span></div>
+        `;
+        remixedContainer.appendChild(div);
+      });
+      
+      // Generate ideas
+      document.getElementById('nicheName').textContent = targetNiche;
+      const ideasContainer = document.getElementById('videoIdeas');
+      ideasContainer.innerHTML = '';
+      
+      const ideas = generateIdeas(targetNiche, targetNiche);
+      ideas.forEach(idea => {
+        const div = document.createElement('div');
+        div.className = 'idea-item';
+        div.innerHTML = `
+          <div class="idea-title">💡 ${idea.title}</div>
+          <div class="idea-meta">
+            <strong>🎬 Hook:</strong> ${idea.hook}<br>
+            <strong>📝 Points:</strong> ${idea.points.join(' → ')}
+          </div>
+        `;
+        ideasContainer.appendChild(div);
+      });
+      
+      // Show results
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('results').classList.add('show');
+    }
+    
+    function showError(msg) {
+      document.getElementById('errorMessage').textContent = msg;
+      document.getElementById('error').style.display = 'block';
+    }
+  </script>
+</body>
+</html>
