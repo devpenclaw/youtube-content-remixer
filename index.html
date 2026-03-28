@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>YouTube Content Remixer 🎬</title>
+  <title>YouTube Content Suite 🎬</title>
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -12,11 +12,14 @@
       --bg-primary: #0f0f0f;
       --bg-secondary: #1a1a1a;
       --bg-card: #252525;
+      --bg-hover: #2a2a2a;
       --text-primary: #ffffff;
       --text-secondary: #aaaaaa;
       --accent: #ff0000;
       --accent-hover: #cc0000;
       --border: #333;
+      --success: #22c55e;
+      --warning: #eab308;
     }
     
     body {
@@ -27,19 +30,63 @@
       line-height: 1.6;
     }
     
-    .container { max-width: 1000px; margin: 0 auto; padding: 20px; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
     
     header {
       background: var(--bg-secondary);
-      padding: 20px 0;
+      padding: 16px 0;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo { font-size: 20px; font-weight: bold; }
+    .logo span { color: var(--accent); }
+    
+    .api-status {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--bg-card);
+    }
+    
+    .api-status.active { color: var(--success); border: 1px solid var(--success); }
+    .api-status.inactive { color: var(--warning); border: 1px solid var(--warning); }
+    
+    h1 { font-size: 24px; margin: 20px 0; }
+    
+    .tabs {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin: 20px 0;
+      padding-bottom: 16px;
       border-bottom: 1px solid var(--border);
     }
     
-    .logo { font-size: 24px; font-weight: bold; }
-    .logo span { color: var(--accent); }
+    .tab {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-secondary);
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
     
-    h1 { font-size: 28px; margin: 30px 0 20px; }
-    h2 { font-size: 20px; margin: 20px 0 15px; color: var(--text-secondary); }
+    .tab:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .tab.active { background: var(--accent); color: white; border-color: var(--accent); }
+    
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
     
     .card {
       background: var(--bg-card);
@@ -58,7 +105,7 @@
       margin-bottom: 6px;
     }
     
-    input, select {
+    input, select, textarea {
       width: 100%;
       padding: 12px 16px;
       font-size: 16px;
@@ -66,9 +113,11 @@
       border-radius: 8px;
       background: var(--bg-secondary);
       color: var(--text-primary);
+      font-family: inherit;
     }
     
-    input:focus, select:focus {
+    textarea { min-height: 120px; resize: vertical; }
+    input:focus, select:focus, textarea:focus {
       outline: none;
       border-color: var(--accent);
     }
@@ -83,83 +132,48 @@
       transition: all 0.2s;
     }
     
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-    }
-    
+    .btn-primary { background: var(--accent); color: white; }
     .btn-primary:hover { background: var(--accent-hover); }
     .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
     
-    .btn-secondary {
-      background: var(--bg-secondary);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-    }
-    
+    .btn-secondary { background: var(--bg-hover); color: var(--text-primary); border: 1px solid var(--border); }
     .btn-secondary:hover { background: var(--border); }
     
     .row { display: flex; gap: 12px; flex-wrap: wrap; }
-    .row .form-group { flex: 1; min-width: 150px; }
+    .row .form-group { flex: 1; min-width: 200px; }
     .row .btn { align-self: flex-end; }
     
-    .results { display: none; }
-    .results.show { display: block; }
-    
-    .section { margin: 30px 0; }
-    
-    .title-item {
-      padding: 16px;
+    .result-box {
       background: var(--bg-secondary);
+      border: 1px solid var(--border);
       border-radius: 8px;
+      padding: 20px;
+      margin-top: 20px;
+      white-space: pre-wrap;
+      font-size: 15px;
+      line-height: 1.8;
+    }
+    
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
       margin-bottom: 12px;
     }
     
-    .original {
-      color: var(--text-secondary);
-      font-size: 14px;
-      margin-bottom: 8px;
-    }
+    .result-title { font-weight: 600; color: var(--text-secondary); }
     
-    .original::before { content: "📍 Original: "; }
-    
-    .remixed {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--accent);
-    }
-    
-    .score {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 12px;
+    .copy-btn {
+      padding: 6px 12px;
       font-size: 12px;
-      font-weight: bold;
-      margin-left: 10px;
-    }
-    
-    .score.high { background: #22c55e; color: white; }
-    .score.medium { background: #eab308; color: black; }
-    .score.low { background: #ef4444; color: white; }
-    
-    .idea-item {
-      padding: 16px;
-      background: var(--bg-secondary);
-      border-radius: 8px;
-      margin-bottom: 12px;
-    }
-    
-    .idea-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--accent);
-      margin-bottom: 8px;
-    }
-    
-    .idea-meta {
-      font-size: 14px;
+      background: var(--bg-hover);
+      border: 1px solid var(--border);
+      border-radius: 6px;
       color: var(--text-secondary);
+      cursor: pointer;
     }
+    
+    .copy-btn:hover { background: var(--border); color: var(--text-primary); }
     
     .loading {
       text-align: center;
@@ -179,18 +193,56 @@
     
     @keyframes spin { to { transform: rotate(360deg); } }
     
-    .trending-grid {
+    .tabs-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+      margin-top: 20px;
     }
     
-    .trending-item {
-      padding: 12px;
+    .output-card {
       background: var(--bg-secondary);
+      border: 1px solid var(--border);
       border-radius: 8px;
-      font-size: 14px;
+      padding: 16px;
     }
+    
+    .output-card h4 {
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    
+    .output-card p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+    
+    .output-card pre {
+      background: var(--bg-primary);
+      padding: 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      overflow-x: auto;
+      white-space: pre-wrap;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .badge.red { background: #ef4444; color: white; }
+    .badge.blue { background: #3b82f6; color: white; }
+    .badge.green { background: #22c55e; color: white; }
+    .badge.purple { background: #a855f7; color: white; }
+    .badge.orange { background: #f97316; color: white; }
     
     footer {
       text-align: center;
@@ -201,267 +253,569 @@
       margin-top: 40px;
     }
     
-    .api-key-note {
-      font-size: 12px;
-      color: var(--text-secondary);
-      margin-top: 6px;
+    .error {
+      background: #7f1d1d;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 16px;
+      color: #fca5a5;
     }
     
-    .ai-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 10px;
-      margin-left: 8px;
+    .success {
+      background: #14532d;
+      padding: 12px;
+      border-radius: 8px;
+      margin-top: 12px;
+      color: #86efac;
+      font-size: 14px;
     }
   </style>
 </head>
 <body>
   <header>
-    <div class="container">
-      <div class="logo">🎬 <span>YouTube Content Remixer</span></div>
+    <div class="container header-content">
+      <div class="logo">🎬 <span>YouTube Content Suite</span></div>
+      <div class="api-status inactive" id="apiStatus">API: Not Set</div>
     </div>
   </header>
   
   <main class="container">
-    <h1>Transform Trending Ideas Into Your Niche <span class="ai-badge">AI Powered</span></h1>
-    
     <div class="card">
       <div class="row">
         <div class="form-group">
-          <label>Source Niche (Trending)</label>
-          <select id="sourceNiche">
-            <option value="General">General Trending</option>
-            <option value="Lifestyle">Lifestyle</option>
-            <option value="Tech">Tech</option>
-            <option value="Gaming">Gaming</option>
-            <option value="Finance">Finance</option>
-            <option value="Health">Health & Fitness</option>
-            <option value="Business">Business</option>
-            <option value="Education">Education</option>
-          </select>
+          <label>Video Title or Topic</label>
+          <input type="text" id="videoTitle" placeholder="e.g. I Tried Living Like a Billionaire for 24 Hours">
         </div>
-        <div class="form-group">
-          <label>Your Niche (Target)</label>
-          <input type="text" id="targetNiche" placeholder="e.g. AI Tools, Crypto, Coding..." value="AI Tools">
+        <div class="form-group" style="min-width: 200px;">
+          <label>Your Niche</label>
+          <input type="text" id="targetNiche" placeholder="e.g. AI Tools" value="AI Tools">
         </div>
         <div class="form-group" style="min-width: 280px;">
-          <label>OpenAI API Key <span class="ai-badge">✨ AI Remix</span></label>
-          <input type="password" id="apiKey" placeholder="sk-proj-... (optional)">
-          <p class="api-key-note">Enter your key for AI-powered remixing. Key stays in your browser.</p>
+          <label>OpenAI API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-proj-...">
+          <p style="font-size: 11px; color: var(--text-secondary); margin-top: 4px;">Key stays in your browser</p>
         </div>
-        <button class="btn btn-primary" onclick="runRemix()">🎬 Remix Titles</button>
       </div>
     </div>
     
-    <div id="results" class="results">
-      <div class="section">
-        <h2>✍️ Remixed Titles</h2>
-        <div id="remixedTitles"></div>
+    <div class="tabs">
+      <button class="tab active" data-tab="script">✍️ Script Generator</button>
+      <button class="tab" data-tab="hook">🎬 Hook Generator</button>
+      <button class="tab" data-tab="description">📝 Description Writer</button>
+      <button class="tab" data-tab="tags">#️⃣ Tag Generator</button>
+      <button class="tab" data-tab="thumbnail">🖼️ Thumbnail Ideas</button>
+      <button class="tab" data-tab="outline">📋 Video Outline</button>
+      <button class="tab" data-tab="full">🚀 Full Package</button>
+    </div>
+    
+    <div id="tabContent">
+      <!-- Script Tab -->
+      <div class="tab-content active" id="tab-script">
+        <div class="card">
+          <h3>✍️ AI Video Script Generator</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Generate a complete, engaging video script with intro, body, and conclusion</p>
+          
+          <div class="row">
+            <div class="form-group">
+              <label>Target Audience</label>
+              <input type="text" id="scriptAudience" placeholder="e.g. Tech enthusiasts, beginners" value="Tech enthusiasts">
+            </div>
+            <div class="form-group" style="max-width: 200px;">
+              <label>Video Length</label>
+              <select id="scriptLength">
+                <option value="short">Short (2-3 min)</option>
+                <option value="medium" selected>Medium (5-7 min)</option>
+                <option value="long">Long (10-15 min)</option>
+              </select>
+            </div>
+          </div>
+          
+          <button class="btn btn-primary" onclick="generateScript()">✨ Generate Script</button>
+          
+          <div id="scriptResult"></div>
+        </div>
       </div>
       
-      <div class="section">
-        <h2>💡 Video Ideas for <span id="nicheName"></span></h2>
-        <div id="videoIdeas"></div>
+      <!-- Hook Tab -->
+      <div class="tab-content" id="tab-hook">
+        <div class="card">
+          <h3>🎬 Hook Generator</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Create compelling first 10-30 seconds that make people click</p>
+          
+          <div class="form-group">
+            <label>Hook Style</label>
+            <select id="hookStyle">
+              <option value="curiosity">Curiosity Gap</option>
+              <option value="controversial">Controversial Take</option>
+              <option value="story">Story Hook</option>
+              <option value="shocking">Shocking Statement</option>
+              <option value="question">Question Hook</option>
+            </select>
+          </div>
+          
+          <button class="btn btn-primary" onclick="generateHook()">✨ Generate Hooks</button>
+          
+          <div id="hookResult"></div>
+        </div>
       </div>
-    </div>
-    
-    <div id="loading" class="loading" style="display: none;">
-      <div class="spinner"></div>
-      <p id="loadingText">Remixing content for your niche...</p>
-    </div>
-    
-    <div class="section">
-      <h2>📊 Sample Trending Patterns</h2>
-      <div class="trending-grid">
-        <div class="trending-item">"I Tried X for 30 Days - Results"</div>
-        <div class="trending-item">"The Secret Nobody Tells You About X"</div>
-        <div class="trending-item">"How I Made $X in One Week"</div>
-        <div class="trending-item">"Why You're Still Failing at X"</div>
-        <div class="trending-item">"X vs Y - What Nobody Knows"</div>
-        <div class="trending-item">"The Ultimate Guide to X"</div>
-        <div class="trending-item">"I Left Everything and Did X"</div>
-        <div class="trending-item">"What Experts Say About X"</div>
+      
+      <!-- Description Tab -->
+      <div class="tab-content" id="tab-description">
+        <div class="card">
+          <h3>📝 SEO Description Writer</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Generate optimized descriptions with timestamps and CTAs</p>
+          
+          <button class="btn btn-primary" onclick="generateDescription()">✨ Generate Description</button>
+          
+          <div id="descriptionResult"></div>
+        </div>
+      </div>
+      
+      <!-- Tags Tab -->
+      <div class="tab-content" id="tab-tags">
+        <div class="card">
+          <h3>#️⃣ Tag Generator</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Generate YouTube tags and hashtags for maximum reach</p>
+          
+          <button class="btn btn-primary" onclick="generateTags()">✨ Generate Tags</button>
+          
+          <div id="tagsResult"></div>
+        </div>
+      </div>
+      
+      <!-- Thumbnail Tab -->
+      <div class="tab-content" id="tab-thumbnail">
+        <div class="card">
+          <h3>🖼️ Thumbnail Ideas</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Get click-worthy thumbnail concepts and text overlays</p>
+          
+          <div class="row">
+            <div class="form-group" style="max-width: 200px;">
+              <label>Thumbnail Style</label>
+              <select id="thumbnailStyle">
+                <option value="reaction">Reaction/Face</option>
+                <option value="text">Big Text</option>
+                <option value="comparison">Before/After</option>
+                <option value="mystery">Mystery/Reveal</option>
+              </select>
+            </div>
+          </div>
+          
+          <button class="btn btn-primary" onclick="generateThumbnail()">✨ Generate Ideas</button>
+          
+          <div id="thumbnailResult"></div>
+        </div>
+      </div>
+      
+      <!-- Outline Tab -->
+      <div class="tab-content" id="tab-outline">
+        <div class="card">
+          <h3>📋 Video Outline</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Structure your video with compelling sections</p>
+          
+          <button class="btn btn-primary" onclick="generateOutline()">✨ Generate Outline</button>
+          
+          <div id="outlineResult"></div>
+        </div>
+      </div>
+      
+      <!-- Full Package Tab -->
+      <div class="tab-content" id="tab-full">
+        <div class="card">
+          <h3>🚀 Full Content Package</h3>
+          <p style="color: var(--text-secondary); margin-bottom: 20px;">Generate everything at once: Script, Hook, Description, Tags, Thumbnail, Outline</p>
+          
+          <button class="btn btn-primary" onclick="generateFull()">✨ Generate Everything</button>
+          
+          <div id="fullResult"></div>
+        </div>
       </div>
     </div>
   </main>
   
   <footer>
-    <p>🎬 YouTube Content Remixer | Turn trending ideas into original content</p>
+    <p>🎬 YouTube Content Suite | Create viral-worthy content with AI</p>
   </footer>
   
   <script>
-    const sampleTitles = [
-      { title: "I Tried Living Like a Billionaire for 24 Hours", views: "10M" },
-      { title: "The Secret to Success Nobody Tells You", views: "5M" },
-      { title: "How I Made $10,000 in One Week", views: "8M" },
-      { title: "Why You're Still Broke (Math Explained)", views: "3M" },
-      { title: "I Bought Everything in One Store Challenge", views: "15M" },
-      { title: "The TRUTH About Intermittent Fasting", views: "4M" },
-      { title: "Building My Dream House in 30 Days", views: "20M" },
-      { title: "What Doctors Won't Tell You About Sleep", views: "6M" }
-    ];
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
+      });
+    });
     
-    function remixTitle(original, targetNiche) {
-      const templates = [
-        `The ${targetNiche} Secret Nobody's Talking About`,
-        `What "${original.substring(0, 25)}..." Taught Me About ${targetNiche}`,
-        `Why ${targetNiche} Is the Future (And You're Behind)`,
-        `${targetNiche} vs Competitors - Complete Comparison`,
-        `I Tried ${targetNiche} for 30 Days - Here's What Happened`,
-        `The ${targetNiche} Guide Nobody Asked For (But You Need)`,
-        `How to Master ${targetNiche} in 2024 (Step by Step)`,
-        `Why ${targetNiche} Will Change Everything This Year`
-      ];
-      return templates[Math.floor(Math.random() * templates.length)];
-    }
+    // Check API key on load
+    const apiKeyInput = document.getElementById('apiKey');
+    const apiStatus = document.getElementById('apiStatus');
     
-    function getScore(title) {
-      const powerWords = ['secret', 'ultimate', 'complete', 'proven', 'shocking', 'truth', 'mistake', 'guide'];
-      const hasPowerWord = powerWords.some(w => title.toLowerCase().includes(w));
-      let score = 60;
-      if (hasPowerWord) score += 20;
-      if (title.length > 40 && title.length < 60) score += 15;
-      if (title.includes(' vs ')) score += 10;
-      return Math.min(100, score);
-    }
-    
-    function getScoreClass(score) {
-      if (score >= 80) return 'high';
-      if (score >= 60) return 'medium';
-      return 'low';
-    }
-    
-    function generateIdeas(niche) {
-      return [
-        { title: `The "${niche}" Formula Nobody Knows`, hook: "This one technique changed everything", points: ["The hidden formula", "Step-by-step breakdown", "Real example"] },
-        { title: `${niche} x Growth - The Perfect Combo`, hook: "Why combining these is a game-changer", points: ["Why it works", "How to combine", "Mistakes to avoid"] },
-        { title: `I Used ${niche} for 30 Days - Full Review`, hook: "Day 1 vs Day 30 results", points: ["The process", "Real transformation", "Honest verdict"] },
-        { title: `Why "${niche}" Is Overrated (And What's Better)`, hook: "Unpopular opinion incoming", points: ["What everyone gets wrong", "The better approach", "Pro tips"] },
-        { title: `${niche} Mastery: From Zero to Expert`, hook: "The complete roadmap", points: ["Start here", "Level up", "Expert strategies"] }
-      ];
-    }
-    
-    async function remixTitleAI(original, targetNiche, apiKey) {
-      if (!apiKey) return remixTitle(original, targetNiche);
-      
-      try {
-        document.getElementById('loadingText').textContent = '✨ AI is remixing titles...';
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: `Transform this YouTube title for a new niche.
-
-ORIGINAL: "${original}"
-TARGET NICHE: ${targetNiche}
-
-Rules:
-- Keep the SAME emotional hook/pattern
-- Make it about "${targetNiche}" instead
-- Use power words: secret, truth, proven, shocking, ultimate
-- Keep under 60 characters
-- Stay factual, no clickbait lies
-
-Return ONLY the new title, nothing else.` }],
-            max_tokens: 50,
-            temperature: 0.8
-          })
-        });
-        const data = await response.json();
-        if (data.choices && data.choices[0]) {
-          return data.choices[0].message.content.trim();
-        }
-      } catch (e) {
-        console.log('AI remix failed, using fallback');
+    function updateApiStatus() {
+      if (apiKeyInput.value.trim()) {
+        apiStatus.textContent = 'API: Active';
+        apiStatus.classList.add('active');
+        apiStatus.classList.remove('inactive');
+      } else {
+        apiStatus.textContent = 'API: Not Set';
+        apiStatus.classList.remove('active');
+        apiStatus.classList.add('inactive');
       }
-      return remixTitle(original, targetNiche);
     }
     
-    async function generateIdeasAI(niche, apiKey) {
-      if (!apiKey) {
-        return generateIdeas(niche).map(idea => `
-          <div class="idea-item">
-            <div class="idea-title">💡 ${idea.title}</div>
-            <div class="idea-meta"><strong>🎬 Hook:</strong> ${idea.hook}<br><strong>📝 Points:</strong> ${idea.points.join(' → ')}</div>
-          </div>
-        `).join('');
-      }
-      
-      try {
-        document.getElementById('loadingText').textContent = '💡 AI is generating ideas...';
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-          body: JSON.stringify({
-            model: 'gpt-4o-mini',
-            messages: [{ role: 'user', content: `Generate 5 unique YouTube video ideas for the niche: "${niche}"
-
-Format like this:
-TITLE: [catchy title]
-HOOK: [first 10 seconds hook]
-POINTS: [point1] → [point2] → [point3]
-
-Make each title unique and curiosity-inducing.` }],
-            max_tokens: 600,
-            temperature: 0.8
-          })
-        });
-        const data = await response.json();
-        if (data.choices && data.choices[0]) {
-          return data.choices[0].message.content.split('\n').map(line => {
-            if (line.includes('TITLE:')) return `<div class="idea-item"><div class="idea-title">💡 ${line.replace(/.*TITLE:\s*/, '')}</div>`;
-            if (line.includes('HOOK:')) return `<div class="idea-meta"><strong>🎬 Hook:</strong> ${line.replace(/.*HOOK:\s*/, '')}<br>`;
-            if (line.includes('POINTS:')) return `<strong>📝 Points:</strong> ${line.replace(/.*POINTS:\s*/, '')}</div></div>`;
-            return '';
-          }).join('');
-        }
-      } catch (e) {
-        console.log('AI ideas failed, using fallback');
-      }
-      return generateIdeas(niche).map(idea => `
-        <div class="idea-item">
-          <div class="idea-title">💡 ${idea.title}</div>
-          <div class="idea-meta"><strong>🎬 Hook:</strong> ${idea.hook}<br><strong>📝 Points:</strong> ${idea.points.join(' → ')}</div>
+    apiKeyInput.addEventListener('change', updateApiStatus);
+    updateApiStatus();
+    
+    function showLoading(container, message = 'Generating...') {
+      container.innerHTML = `
+        <div class="loading">
+          <div class="spinner"></div>
+          <p>${message}</p>
         </div>
-      `).join('');
+      `;
     }
     
-    async function runRemix() {
-      const targetNiche = document.getElementById('targetNiche').value.trim();
-      const apiKey = document.getElementById('apiKey').value.trim();
-      
-      if (!targetNiche) {
-        alert('Please enter your target niche');
-        return;
+    function showError(container, message) {
+      container.innerHTML = `<div class="error">❌ ${message}</div>`;
+    }
+    
+    function showSuccess(container, message) {
+      container.innerHTML += `<div class="success">✅ ${message}</div>`;
+    }
+    
+    function copyToClipboard(text, btn) {
+      navigator.clipboard.writeText(text).then(() => {
+        const original = btn.textContent;
+        btn.textContent = 'Copied!';
+        setTimeout(() => btn.textContent = original, 2000);
+      });
+    }
+    
+    async function callOpenAI(messages, maxTokens = 1000) {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) {
+        throw new Error('Please enter your OpenAI API key');
       }
       
-      document.getElementById('results').classList.remove('show');
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('loadingText').textContent = apiKey ? '✨ AI is remixing titles...' : 'Generating titles...';
+      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${apiKey}`
+        },
+        body: JSON.stringify({
+          model: 'gpt-4o-mini',
+          messages,
+          max_tokens: maxTokens,
+          temperature: 0.8
+        })
+      });
       
-      const remixedContainer = document.getElementById('remixedTitles');
-      remixedContainer.innerHTML = '';
+      if (!response.ok) {
+        const err = await response.json();
+        throw new Error(err.error?.message || 'API request failed');
+      }
       
-      for (const item of sampleTitles.slice(0, 5)) {
-        const remixed = await remixTitleAI(item.title, targetNiche, apiKey);
-        const score = getScore(remixed);
-        remixedContainer.innerHTML += `
-          <div class="title-item">
-            <div class="original">"${item.title}" <span style="color: #666">(${item.views})</span></div>
-            <div class="remixed">✨ "${remixed}" <span class="score ${getScoreClass(score)}">${score}/100</span></div>
+      const data = await response.json();
+      return data.choices[0].message.content;
+    }
+    
+    function getCommonInputs() {
+      const title = document.getElementById('videoTitle').value.trim() || 'The Ultimate Guide to AI Tools';
+      const niche = document.getElementById('targetNiche').value.trim() || 'AI Tools';
+      return { title, niche };
+    }
+    
+    // Script Generator
+    async function generateScript() {
+      const { title, niche } = getCommonInputs();
+      const audience = document.getElementById('scriptAudience').value.trim();
+      const length = document.getElementById('scriptLength').value;
+      const container = document.getElementById('scriptResult');
+      
+      showLoading(container, 'Writing your script...');
+      
+      try {
+        const lengthText = { short: '2-3 minutes', medium: '5-7 minutes', long: '10-15 minutes' }[length];
+        
+        const script = await callOpenAI([{
+          role: 'user',
+          content: `Write a complete YouTube video script for this topic: "${title}"
+Niche: ${niche}
+Target Audience: ${audience}
+Video Length: ${lengthText}
+
+Format your script with:
+- [INTRO] - Hook and opening (first 10 seconds)
+- [MAIN CONTENT] - The meat of your video with talking points
+- [OUTRO] - Call to action and closing
+
+Make it engaging, natural, and conversational. Include specific examples and phrases to say.`
+        }], 2000);
+        
+        container.innerHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <span class="result-title">✍️ Your Script</span>
+              <button class="copy-btn" onclick="copyToClipboard(\`${script.replace(/`/g, '\\`')}\`, this)">📋 Copy</button>
+            </div>
+            ${script}
           </div>
         `;
+      } catch (e) {
+        showError(container, e.message);
       }
+    }
+    
+    // Hook Generator
+    async function generateHook() {
+      const { title, niche } = getCommonInputs();
+      const style = document.getElementById('hookStyle').value;
+      const container = document.getElementById('hookResult');
       
-      document.getElementById('nicheName').textContent = targetNiche;
-      document.getElementById('loadingText').textContent = 'Generating video ideas...';
-      document.getElementById('videoIdeas').innerHTML = await generateIdeasAI(targetNiche, apiKey);
+      showLoading(container, 'Creating hooks...');
       
-      document.getElementById('loading').style.display = 'none';
-      document.getElementById('results').classList.add('show');
+      try {
+        const styleDesc = {
+          curiosity: 'Create curiosity gaps that make people need to know more',
+          controversial: 'Take an unexpected stance that sparks debate',
+          story: 'Start with a compelling mini-story',
+          shocking: 'Open with a shocking fact or statement',
+          question: 'Ask a question that resonates with the audience'
+        }[style];
+        
+        const hooks = await callOpenAI([{
+          role: 'user',
+          content: `Generate 5 YouTube video hooks for this topic: "${title}"
+Niche: ${niche}
+Style: ${styleDesc}
+
+For each hook provide:
+1. The hook text (first 10-30 seconds)
+2. Why it works
+3. A suggested visual (what to show on camera)
+
+Format as:
+HOOK 1: [text]
+Why: [explanation]
+Visual: [suggestion]
+
+HOOK 2: ... (repeat for 5)`
+        }], 1500);
+        
+        container.innerHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <span class="result-title">🎬 5 Hook Options</span>
+              <button class="copy-btn" onclick="copyToClipboard(\`${hooks.replace(/`/g, '\\`')}\`, this)">📋 Copy</button>
+            </div>
+            ${hooks}
+          </div>
+        `;
+      } catch (e) {
+        showError(container, e.message);
+      }
+    }
+    
+    // Description Generator
+    async function generateDescription() {
+      const { title, niche } = getCommonInputs();
+      const container = document.getElementById('descriptionResult');
+      
+      showLoading(container, 'Writing description...');
+      
+      try {
+        const description = await callOpenAI([{
+          role: 'user',
+          content: `Write a YouTube video description for:
+Title: "${title}"
+Niche: ${niche}
+
+Include:
+1. Compelling first paragraph (hook)
+2. Timestamps breakdown (format: 0:00 - Introduction)
+3. Key topics covered
+4. Links section (replace with placeholders)
+5. CTA (subscribe, like, comment)
+6. Relevant keywords for SEO
+
+Keep it engaging but optimized for search.`
+        }], 1500);
+        
+        container.innerHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <span class="result-title">📝 SEO Description</span>
+              <button class="copy-btn" onclick="copyToClipboard(\`${description.replace(/`/g, '\\`')}\`, this)">📋 Copy</button>
+            </div>
+            ${description}
+          </div>
+        `;
+      } catch (e) {
+        showError(container, e.message);
+      }
+    }
+    
+    // Tag Generator
+    async function generateTags() {
+      const { title, niche } = getCommonInputs();
+      const container = document.getElementById('tagsResult');
+      
+      showLoading(container, 'Generating tags...');
+      
+      try {
+        const tags = await callOpenAI([{
+          role: 'user',
+          content: `Generate YouTube tags and hashtags for:
+Title: "${title}"
+Niche: ${niche}
+
+Provide:
+1. 15 YouTube tags (separate with commas)
+2. 10 Instagram/Twitter hashtags
+3. 5 trending related searches people might use
+
+Format clearly with headers.`
+        }], 800);
+        
+        container.innerHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <span class="result-title">#️⃣ Tags & Hashtags</span>
+              <button class="copy-btn" onclick="copyToClipboard(\`${tags.replace(/`/g, '\\`')}\`, this)">📋 Copy</button>
+            </div>
+            ${tags}
+          </div>
+        `;
+      } catch (e) {
+        showError(container, e.message);
+      }
+    }
+    
+    // Thumbnail Generator
+    async function generateThumbnail() {
+      const { title, niche } = getCommonInputs();
+      const style = document.getElementById('thumbnailStyle').value;
+      const container = document.getElementById('thumbnailResult');
+      
+      showLoading(container, 'Creating thumbnail ideas...');
+      
+      try {
+        const ideas = await callOpenAI([{
+          role: 'user',
+          content: `Generate 5 YouTube thumbnail concepts for:
+Title: "${title}"
+Niche: ${niche}
+Style: ${style}
+
+For each thumbnail provide:
+1. Main image/concept
+2. Text overlay (keep under 5 words)
+3. Color scheme suggestion
+4. Expression or reaction to show
+5. Why it gets clicks
+
+Make them eye-catching and click-worthy!`
+        }], 1200);
+        
+        container.innerHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <span class="result-title">🖼️ Thumbnail Concepts</span>
+              <button class="copy-btn" onclick="copyToClipboard(\`${ideas.replace(/`/g, '\\`')}\`, this)">📋 Copy</button>
+            </div>
+            ${ideas}
+          </div>
+        `;
+      } catch (e) {
+        showError(container, e.message);
+      }
+    }
+    
+    // Outline Generator
+    async function generateOutline() {
+      const { title, niche } = getCommonInputs();
+      const container = document.getElementById('outlineResult');
+      
+      showLoading(container, 'Building outline...');
+      
+      try {
+        const outline = await callOpenAI([{
+          role: 'user',
+          content: `Create a detailed video outline for:
+Title: "${title}"
+Niche: ${niche}
+
+Include:
+1. Hook section (first 30 seconds)
+2. Problem/Tension statement
+3. 5-7 main sections with timestamps
+4. Key points under each section
+5. Cliffhangers between sections
+6. Conclusion with CTA
+
+Make it engaging with natural story flow.`
+        }], 1500);
+        
+        container.innerHTML = `
+          <div class="result-box">
+            <div class="result-header">
+              <span class="result-title">📋 Video Outline</span>
+              <button class="copy-btn" onclick="copyToClipboard(\`${outline.replace(/`/g, '\\`')}\`, this)">📋 Copy</button>
+            </div>
+            ${outline}
+          </div>
+        `;
+      } catch (e) {
+        showError(container, e.message);
+      }
+    }
+    
+    // Full Package
+    async function generateFull() {
+      const { title, niche } = getCommonInputs();
+      const container = document.getElementById('fullResult');
+      
+      showLoading(container, 'Generating full content package...');
+      
+      try {
+        const [script, hooks, description, tags, outline] = await Promise.all([
+          callOpenAI([{ role: 'user', content: `Write a 5-minute YouTube script for "${title}" in ${niche} niche. Include [INTRO], [MAIN], [OUTRO].` }], 1500),
+          callOpenAI([{ role: 'user', content: `Generate 3 YouTube hooks for "${title}" in ${niche}. First 15 seconds only.` }], 600),
+          callOpenAI([{ role: 'user', content: `Write YouTube description for "${title}" (${niche}). Include timestamps and CTA.` }], 800),
+          callOpenAI([{ role: 'user', content: `Generate 15 YouTube tags + 10 hashtags for "${title}" (${niche}).` }], 400),
+          callOpenAI([{ role: 'user', content: `Create video outline for "${title}" (${niche}). 6-8 sections with timestamps.` }], 1000)
+        ]);
+        
+        container.innerHTML = `
+          <div class="tabs-grid">
+            <div class="output-card">
+              <h4>🎬 Hooks</h4>
+              <pre>${hooks}</pre>
+            </div>
+            <div class="output-card">
+              <h4>📝 Description</h4>
+              <pre>${description}</pre>
+            </div>
+            <div class="output-card">
+              <h4>#️⃣ Tags</h4>
+              <pre>${tags}</pre>
+            </div>
+            <div class="output-card">
+              <h4>📋 Outline</h4>
+              <pre>${outline}</pre>
+            </div>
+          </div>
+          <div class="output-card" style="margin-top: 20px;">
+            <h4>✍️ Full Script</h4>
+            <pre>${script}</pre>
+            <button class="copy-btn" style="margin-top: 12px;" onclick="copyToClipboard(\`${script.replace(/`/g, '\\`')}\`, this)">📋 Copy Full Script</button>
+          </div>
+        `;
+      } catch (e) {
+        showError(container, e.message);
+      }
     }
   </script>
 </body>
