@@ -2,11 +2,16 @@
   "version": 2,
   "builds": [
     {
-      "src": "vercel.js",
-      "use": "@vercel/node"
+      "src": "index.html",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "favicon.svg",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
-    { "src": "/(.*)", "dest": "/vercel.js" }
+    { "src": "/favicon.svg", "dest": "/favicon.svg" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
